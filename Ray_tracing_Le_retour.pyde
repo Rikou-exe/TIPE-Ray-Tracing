@@ -1,0 +1,250 @@
+import math
+
+    
+    
+def rotationX(vect, ang):
+    mat = [[1, 0, 0], [0, math.cos(ang), -math.sin(ang)], [0, math.sin(ang), math.cos(ang)]]
+    res=[]
+    for i in range(3):
+        s=0
+        for j in range(3):
+            s+=mat[i][j]*vect[j]
+        res.append(s)
+    return res
+
+def rotationY(vect, ang):
+    mat = [[cos(ang), 0, sin(ang)], [0, 1, 0], [-sin(ang), 0, cos(ang)]]
+    res=[]
+    for i in range(3):
+        s=0
+        for j in range(3):
+            s+=mat[i][j]*vect[j]
+        res.append(s)
+    return res
+
+def rotationZ(vect, ang):
+    mat = [[cos(ang), -sin(ang), 0], [sin(ang), cos(ang), 0], [0, 0, 1]]
+    res=[]
+    for i in range(3):
+        s=0
+        for j in range(3):
+            s+=mat[i][j]*vect[j]
+        res.append(s)
+    return res
+
+'''
+Variables terrain
+'''
+N = 192
+space = [ [ [ [] for i in range(N)] for j in range(N)] for k in range(N)]
+
+#space[(N/2)][(N/2)][(N/2)]=[0, 0, 0]
+#space[(N/2)+1][(N/2)+1][(N/2)+1]=[0, 0, 0]
+
+'''
+Variables camera
+'''
+
+x_cam = 50.0
+y_cam = float(N/2)
+z_cam = float(N/2)
+width_screen = 20
+height_screen = 20
+distance_cam_screen = 30
+angle_cam_Oxy = 0
+angle_cam_z = 0
+
+'''
+Variables utilitaires
+'''
+
+vect_cam_ecran=[ distance_cam_screen*math.cos(angle_cam_Oxy)*math.cos(angle_cam_z), distance_cam_screen*math.sin(angle_cam_Oxy)*math.cos(angle_cam_z), distance_cam_screen*math.sin(angle_cam_z) ]
+
+'''
+Fin du paramétrage
+'''
+ 
+def draw_rect(x, y, z, w, h, l, r, g, b):
+    if (r, g, b) == ("n", "n", "n"):
+        for i in range(x, x+w+1):
+            for j in range(y, y+h+1):
+                for k in range(z, z+l+1):
+                    space[i][j][k]=[(255*(i-x))/w, (255*(j-y))/h, (255*(k-z))/l]
+    else:
+        for i in range(x, x+w+1):
+            for j in range(y, y+h+1):
+                for k in range(z, z+l+1):
+                    space[i][j][k]=[r, g, b]
+
+def draw_black_line(x, y, z, d, t):
+    if d == 0:
+        for i in range(x, x+t):
+            space[i][y][z]= [0, 0, 0]
+    
+    if d == 1:
+        for i in range(y, y+t):
+            space[x][i][z]= [0, 0, 0]
+    if d == 2:
+        for i in range(z, z+t):
+            space[x][y][i]= [0, 0, 0]
+                
+        
+'''    
+draw_rect(N/2 -10, N/2 - 5, N/2 - 3, 20, 10, 6, 255, 0, 0)
+draw_rect(N/2 -20, N/2 - 5, N/2 - 5, 10, 10, 10, 255, 255, 0)
+draw_rect(N/2 -9, N/2 - 10, N/2 - 1, 2, 30, 2, 255, 0, 255)
+draw_rect(N/2 + 10, N/2 - 5, N/2 - 2, 10, 3, 4, 0, 255, 0)
+draw_rect(N/2 + 10, N/2 + 1, N/2 - 2, 10, 3, 4, 0, 255, 0)
+    '''
+draw_rect(N/2 -10, N/2 - 10, N/2 - 10, 20, 20, 20, 'n', 'n', 'n')
+draw_black_line(N/2 -10, N/2 -10, N/2 -10, 0, 20)
+draw_black_line(N/2 -10, N/2 -10, N/2 -10, 1, 20)
+draw_black_line(N/2 -10, N/2 -10, N/2 -10, 2, 20)
+
+draw_black_line(N/2 +10, N/2 -10, N/2 -10, 1, 20)
+draw_black_line(N/2 +10, N/2 -10, N/2 -10, 2, 20)
+
+draw_black_line(N/2 -10, N/2 +10, N/2 -10, 0, 20)
+draw_black_line(N/2 -10, N/2 +10, N/2 -10, 2, 20)
+
+draw_black_line(N/2 -10, N/2 -10, N/2 +10, 0, 20)
+draw_black_line(N/2 -10, N/2 -10, N/2 +10, 1, 20)
+
+draw_black_line(N/2 -10, N/2 +10, N/2 +10, 0, 20)
+draw_black_line(N/2 +10, N/2 -10, N/2 +10, 1, 20)
+draw_black_line(N/2 +10, N/2 +10, N/2 -10, 2, 20)
+
+def get_screen():
+    res = [ [ [255, 255, 255] for i in range(2*width_screen) ] for j in range(2*height_screen) ]
+    for i in range(-width_screen, width_screen):
+        for j in range(-height_screen, height_screen):
+            v = [distance_cam_screen, i, j]
+            pt = rotationZ(rotationY(v, angle_cam_z), angle_cam_Oxy)
+            hyp = math.sqrt(distance_cam_screen**2 + i**2 + j**2)
+            deltaX, deltaY, deltaZ = pt[0]/hyp, pt[1]/hyp, pt[2]/hyp
+            x = int(x_cam)
+            y = int(y_cam)
+            z = int(z_cam)
+            s_x, s_y, s_z = 0, 0, 0
+            b=0
+            #if (i, j) == (19, 19):
+                #print(x, y, z, deltaX, deltaY, deltaZ)
+            while int(x) > 0 and int(y) > 0 and int(z) > 0 and int(x) < N-1 and int(y) < N-1 and int(z)< N-1:
+                b+=1
+                s_x+=deltaX
+                if s_x >=1 or s_x<=-1:
+                    if s_x>=1:
+                        x+=1
+                        s_x-=1
+                    else:
+                        x-=1
+                        s_x+=1
+                    if space[int(x)][int(y)][int(z)]!=[]:
+                        res[height_screen+j][width_screen+i] = space[int(x)][int(y)][int(z)]
+                        break
+                
+                s_y+=deltaY
+                if s_y >=1 or s_y<=-1:
+                    if s_y>=1:
+                        y+=1
+                        s_y-=1
+                    else:
+                        y-=1
+                        s_y+=1
+                    if space[int(x)][int(y)][int(z)]!=[]:
+                        res[height_screen+j][width_screen+i] = space[int(x)][int(y)][int(z)]
+                        break
+               
+                s_z+=deltaZ
+                if s_z >=1 or s_z<=-1:
+                    if s_z>=1:
+                        z+=1
+                        s_z-=1
+                    else:
+                        z-=1
+                        s_z+=1
+                    if space[int(x)][int(y)][int(z)]!=[]:
+                        res[height_screen+j][width_screen+i] = space[int(x)][int(y)][int(z)]
+                        break
+                if b==100:break
+    return res
+
+def Affiche_ecran(l):
+    longueur = len(l[0])
+    hauteur = len(l)
+    
+    for i in range(longueur):
+        for j in range(hauteur):
+            fill(l[j][i][0], l[j][i][1], l[j][i][2])
+            stroke(l[j][i][0], l[j][i][1], l[j][i][2])
+            rect(width*i/longueur, height*j/hauteur, width/longueur, height/hauteur)
+    
+    
+def setup():
+  size(800, 800)
+  background(255)
+  frameRate(60)
+    
+def draw():
+    global angle_cam_z
+    Affiche_ecran( get_screen() )
+
+'''
+def keyPressed():
+    global x_cam, y_cam, z_cam, angle_cam_Oxy, angle_cam_z
+    if key == 'z' or key == 'Z':
+        v = rotationZ(rotationY(rotationZ([x_cam-N/2, y_cam-N/2, z_cam-N/2], -angle_cam_Oxy), 0.05), angle_cam_Oxy)
+        x_cam, y_cam, z_cam = v[0]+N/2, v[1]+N/2, v[2]+N/2
+        angle_cam_z +=0.05
+    if key == 's' or key == 'S':
+        v = rotationZ(rotationY(rotationZ([x_cam-N/2, y_cam-N/2, z_cam-N/2], -angle_cam_Oxy), -0.05), angle_cam_Oxy)
+        x_cam, y_cam, z_cam = v[0]+N/2, v[1]+N/2, v[2]+N/2
+        angle_cam_z -=0.05
+    if key == 'q' or key == 'Q':
+        v = rotationZ([x_cam-N/2, y_cam-N/2, z_cam-N/2], 0.05)
+        x_cam, y_cam, z_cam = v[0]+N/2, v[1]+N/2, v[2]+N/2
+        angle_cam_Oxy +=0.05
+    if key == 'd' or key == 'D':
+        v = rotationZ([x_cam-N/2, y_cam-N/2, z_cam-N/2], -0.05)
+        x_cam, y_cam, z_cam = v[0]+N/2, v[1]+N/2, v[2]+N/2
+        angle_cam_Oxy -=0.05
+    if key == 'a' or key == 'A':
+        x_cam=(0.95*x_cam) + 0.025*N
+        y_cam= (0.95*y_cam) + 0.025*N
+        z_cam=(0.95*z_cam) + 0.025*N
+        
+    if key == 'e' or key == 'E':
+        x_cam=(1.05*x_cam) - 0.025*N
+        y_cam= (1.05*y_cam) - 0.025*N
+        z_cam=(1.05*z_cam) - 0.025*N
+'''
+
+def keyPressed():
+    global x_cam, y_cam, z_cam, angle_cam_Oxy, angle_cam_z
+    if key == 'z' or key == 'Z':
+        x_cam, y_cam= x_cam + math.sin(angle_cam_Oxy), y_cam + math.cos(angle_cam_Oxy)
+    if key == 's' or key == 'S':
+        x_cam, y_cam= x_cam - math.sin(angle_cam_Oxy), y_cam - math.cos(angle_cam_Oxy)
+    if key == 'q' or key == 'Q':
+        x_cam, y_cam= x_cam + math.cos(angle_cam_Oxy), y_cam + math.sin(angle_cam_Oxy)
+    if key == 'd' or key == 'D':
+        x_cam, y_cam= x_cam - math.cos(angle_cam_Oxy), y_cam - math.sin(angle_cam_Oxy)
+    if key == 'a' or key == 'A':
+        z_cam= z_cam + 1
+    if key == 'e' or key == 'E':
+        z_cam = z_cam - 1
+        
+    if key == 'k' or key == 'K':
+        angle_cam_Oxy += PI * 0.05
+    if key == 'm' or key == 'M':
+        angle_cam_Oxy -= PI * 0.05
+    if key == 'o' or key == 'O':
+        angle_cam_z += PI * 0.05
+    if key == 'l' or key == 'L':
+        angle_cam_z -= PI * 0.05
+
+    
+
+            
+        
+    
